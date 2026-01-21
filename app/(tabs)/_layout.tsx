@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router'
-import React from 'react'
+import { Tabs } from "expo-router";
+import React from "react";
 
 export default function TabsLayout() {
   return (
@@ -8,35 +8,35 @@ export default function TabsLayout() {
         headerShown: false,
 
         tabBarStyle: {
-          backgroundColor: '#000',
+          backgroundColor: "#000",
           borderTopWidth: 1,
-          borderTopColor: '#333',
+          borderTopColor: "#333",
         },
 
-        tabBarActiveTintColor: '#fff',
-        tabBarInactiveTintColor: '#888',
+        tabBarActiveTintColor: "#fff",
+        tabBarInactiveTintColor: "#888",
 
         tabBarItemStyle: {
           borderRightWidth: 1,
-          borderRightColor: '#333',
+          borderRightColor: "#333",
         },
 
         sceneContainerStyle: {
-          backgroundColor: '#000',
+          backgroundColor: "#000",
         },
       }}
     >
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
+          title: "Messages",
         }}
       />
 
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: "Profile",
 
           tabBarItemStyle: {
             borderRightWidth: 0,
@@ -44,5 +44,5 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
-  )
+  );
 }
