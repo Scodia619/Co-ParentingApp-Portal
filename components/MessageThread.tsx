@@ -1,5 +1,6 @@
 import MessageBubble from "@/components/MessageBubble";
 import { useMember } from "@/context/MemberContext";
+import { startChatHub, stopChatHub } from "@/services/chatHub";
 import {
   GetMessagesByConversation,
   PostMessage,
@@ -59,6 +60,19 @@ export default function MessagesThread({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    startChatHub(conversationId, (message) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.messageId === message.messageId)) return prev;
+        return [message, ...prev];
+      });
+    });
+
+    return () => {
+      stopChatHub(conversationId);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     loadMessages();
