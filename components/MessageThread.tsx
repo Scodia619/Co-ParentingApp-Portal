@@ -1,6 +1,8 @@
 import MessageBubble from "@/components/MessageBubble";
 import { useMember } from "@/context/MemberContext";
+import { useUnread } from "@/context/UnreadContext";
 import { startChatHub, stopChatHub } from "@/services/chatHub";
+import { MarkConversationAsRead } from "@/services/conversationService";
 import {
   GetMessagesByConversation,
   PostMessage,
@@ -10,15 +12,13 @@ import { Stack } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
+  View
 } from "react-native";
 
 const PAGE_SIZE = 20;
@@ -38,6 +38,7 @@ export default function MessagesThread({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [oldestMessageAt, setOldestMessageAt] = useState<string | null>(null);
+  const {setTotalUnread} = useUnread()
 
   const loadMessages = async () => {
     if (!member || loading || !hasMore) return;
@@ -62,21 +63,41 @@ export default function MessagesThread({
   };
 
   useEffect(() => {
-    startChatHub(conversationId, (message) => {
-      setMessages((prev) => {
-        if (prev.some((m) => m.messageId === message.messageId)) return prev;
-        return [message, ...prev];
-      });
-    });
+  if (!member) return;
 
-    return () => {
-      stopChatHub(conversationId);
-    };
-  }, [conversationId]);
+  startChatHub(conversationId, (message) => {
+    if (message.senderId === member.id) return;
+
+    setMessages((prev) => {
+      if (prev.some((m) => m.messageId === message.messageId)) return prev;
+      return [message, ...prev];
+    });
+  });
+
+  return () => {
+    stopChatHub();
+  };
+}, [conversationId, member]);
+
 
   useEffect(() => {
     loadMessages();
   }, [conversationId]);
+
+  useEffect(() => {
+  if (!member) return;
+
+  const markAsRead = async () => {
+    try {
+      await MarkConversationAsRead(conversationId, member.id);
+      setTotalUnread(prev => Math.max(prev - 1, 0));
+    } catch (err) {
+      console.error("Failed to mark conversation as read", err);
+    }
+  };
+
+  markAsRead();
+}, [conversationId, member]);
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !member) return;
@@ -111,63 +132,60 @@ export default function MessagesThread({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
-          <Stack.Screen
-            options={{
-              headerShown: true,
-              headerTitle: participantName || "Messages",
-              headerTitleAlign: "left",
-              headerStyle: {
-                backgroundColor: "#000",
-              },
-              headerTitleStyle: {
-                color: "#fff",
-                fontSize: 18,
-                fontWeight: "600",
-              },
-              headerShadowVisible: false,
-            }}
-          />
+  <KeyboardAvoidingView
+    style={{ flex: 1 }}
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+  >
+    <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: participantName || "Messages",
+          headerTitleAlign: "left",
+          headerStyle: {
+            backgroundColor: "#000",
+          },
+          headerTitleStyle: {
+            color: "#fff",
+            fontSize: 18,
+            fontWeight: "600",
+          },
+          headerShadowVisible: false,
+        }}
+      />
 
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            inverted
-            keyExtractor={(item, index) => `${item.messageId}-${index}`}
-            onEndReached={loadMessages}
-            onEndReachedThreshold={0.2}
-            renderItem={({ item }) => (
-              <MessageBubble
-                message={item}
-                isOwnMessage={item.senderId === member!.id}
-              />
-            )}
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        inverted
+        keyExtractor={(item) => item.messageId}
+        onEndReached={loadMessages}
+        onEndReachedThreshold={0.2}
+        keyboardDismissMode="on-drag"
+        renderItem={({ item }) => (
+          <MessageBubble
+            message={item}
+            isOwnMessage={item.senderId === member!.id}
           />
+        )}
+      />
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message"
-              placeholderTextColor="#888"
-              value={newMessage}
-              onChangeText={setNewMessage}
-            />
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <View>
-                <Text style={styles.sendButtonText}>Send</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
-  );
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type a message"
+          placeholderTextColor="#888"
+          value={newMessage}
+          onChangeText={setNewMessage}
+        />
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </KeyboardAvoidingView>
+);
 }
 
 const styles = StyleSheet.create({

@@ -1,4 +1,5 @@
 import { useMember } from "@/context/MemberContext";
+import { useUnread } from "@/context/UnreadContext";
 import { GetUserConversations } from "@/services/conversationService";
 import { Conversation } from "@/types/conversation";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
@@ -17,18 +18,24 @@ const ConversationsScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const loadConversations = async () => {
-    if (!member) return;
-    setLoading(true);
-    try {
-      const data = await GetUserConversations(member.id);
-      setConversations(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { setTotalUnread} = useUnread();
+
+const loadConversations = async () => {
+  if (!member) return;
+  setLoading(true);
+  try {
+    const data = await GetUserConversations(member.id);
+    setConversations(data);
+
+    const total = data.filter(c => c.unreadCount > 0).length
+    console.log("Total Unread Reduce Function: ", total);
+    setTotalUnread(total);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +75,10 @@ const ConversationsScreen: React.FC = () => {
         ) : (
           <Text style={styles.lastMessage}>Send your first message</Text>
         )}
+        <Text style={styles.unreadBadge}>
+          {item.unreadCount > 0 ? item.unreadCount : ""}
+        </Text>
+
       </TouchableOpacity>
     );
   };
@@ -114,4 +125,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
+  unreadBadge: {
+  backgroundColor: "#2563eb",
+  color: "#fff",
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  borderRadius: 12,
+  alignSelf: "flex-start",
+  fontWeight: "600",
+  marginTop: 4,
+},
+
 });

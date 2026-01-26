@@ -19,10 +19,17 @@ export const startChatHub = async (
   await connection.invoke("JoinConversation", conversationId);
 };
 
-export const stopChatHub = async (conversationId: string) => {
+export const stopChatHub = async () => {
   if (!connection) return;
 
-  await connection.invoke("LeaveConversation", conversationId);
-  await connection.stop();
+  const conn = connection;
   connection = null;
+
+  try {
+    if (conn.state === signalR.HubConnectionState.Connected) {
+      await conn.stop();
+    }
+  } catch (err) {
+    console.warn("SignalR stop error", err);
+  }
 };

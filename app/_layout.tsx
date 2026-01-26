@@ -1,4 +1,5 @@
 import { MemberProvider, useMember } from '@/context/MemberContext'
+import { UnreadProvider } from '@/context/UnreadContext'
 import { Redirect, Stack } from 'expo-router'
 import React from 'react'
 
@@ -13,9 +14,12 @@ function AppLayout() {
 
 export default function RootLayout() {
   return (
-    <MemberProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-      <AppLayout />
-    </MemberProvider>
+    <UnreadProvider>
+      <MemberProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+        <AppLayout />
+      </MemberProvider>
+    </UnreadProvider>
+    
   )
 }

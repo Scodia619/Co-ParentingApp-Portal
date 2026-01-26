@@ -20,3 +20,15 @@ export const GetUserConversations = async (
     throw new Error(error.message);
   }
 };
+
+export const MarkConversationAsRead = async (
+  conversationId: string,
+  memberId: string,
+) => {
+  await fetch(
+    `${API_BASE_URL}/ConversationMember/${conversationId}/read?memberId=${memberId}`,
+    {
+      method: "POST",
+    },
+  );
+};
