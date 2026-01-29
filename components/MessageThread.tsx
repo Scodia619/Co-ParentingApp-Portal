@@ -26,9 +26,11 @@ const PAGE_SIZE = 20;
 export default function MessagesThread({
   conversationId,
   participantName,
+  totalUnread
 }: {
   conversationId: string;
   participantName?: string;
+  totalUnread : string
 }) {
   const { member } = useMember();
   const flatListRef = useRef<FlatList>(null);
@@ -90,7 +92,11 @@ export default function MessagesThread({
   const markAsRead = async () => {
     try {
       await MarkConversationAsRead(conversationId, member.id);
-      setTotalUnread(prev => Math.max(prev - 1, 0));
+      console.log("Total Unread", totalUnread)
+      if(parseInt(totalUnread) > 0){
+        console.log(totalUnread)
+        setTotalUnread(prev => Math.max(prev - 1, 0));
+      }
     } catch (err) {
       console.error("Failed to mark conversation as read", err);
     }

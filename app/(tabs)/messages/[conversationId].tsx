@@ -4,9 +4,10 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 export default function ConversationScreen() {
-  const { conversationId, participantName } = useLocalSearchParams<{
+  const { conversationId, participantName, totalUnread } = useLocalSearchParams<{
     conversationId?: string;
     participantName?: string;
+    totalUnread: string;
   }>();
 
   if (!conversationId || typeof conversationId !== "string") {
@@ -21,6 +22,7 @@ export default function ConversationScreen() {
     <MessagesThread
       conversationId={conversationId}
       participantName={participantName}
+      totalUnread={totalUnread}
     />
   );
 }

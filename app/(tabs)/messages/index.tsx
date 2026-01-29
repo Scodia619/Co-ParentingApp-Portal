@@ -28,7 +28,6 @@ const loadConversations = async () => {
     setConversations(data);
 
     const total = data.filter(c => c.unreadCount > 0).length
-    console.log("Total Unread Reduce Function: ", total);
     setTotalUnread(total);
   } catch (err) {
     console.error(err);
@@ -46,10 +45,11 @@ const loadConversations = async () => {
   const openConversation = (
     conversationId: string,
     participantName: string,
+    totalUnread: number
   ) => {
     router.push({
       pathname: "/(tabs)/messages/[conversationId]",
-      params: { conversationId, participantName },
+      params: { conversationId, participantName, totalUnread },
     });
   };
 
@@ -60,7 +60,7 @@ const loadConversations = async () => {
       <TouchableOpacity
         style={styles.itemContainer}
         onPress={() =>
-          openConversation(item.conversationId, item.participantName)
+          openConversation(item.conversationId, item.participantName, item.unreadCount)
         }
       >
         <Text style={styles.name}>{item.participantName}</Text>
